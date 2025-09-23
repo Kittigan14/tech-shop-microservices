@@ -1,0 +1,44 @@
+{
+  "name": "tech-shop-microservices",
+  "version": "1.0.0",
+  "description": "E-commerce Shopping System using Microservices Architecture",
+  "main": "gateway.js",
+  "scripts": {
+    "product": "node product-service.js",
+    "user": "node user-service.js",
+    "order": "node order-service.js",
+    "payment": "node payment-service.js",
+    "gateway": "node gateway.js",
+    "dev": "concurrently \"npm run product\" \"npm run user\" \"npm run order\" \"npm run payment\" \"npm run gateway\""
+  }
+,
+  "keywords": [
+    "microservices",
+    "nodejs",
+    "express",
+    "ejs",
+    "ecommerce",
+    "shopping"
+  ],
+  "author": "Tech Shop Team",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "bcryptjs": "^2.4.3",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "http-proxy-middleware": "^2.0.6",
+    "jsonwebtoken": "^9.0.2",
+    "open": "^10.2.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.0.0",
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@200;300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3730a3 0%, #5b21b6 100%);
+        }
+
+        .modal-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex-shrink-0 flex items-center">
+                    <i class="fas fa-microchip text-2xl mr-2"></i>
+                    <span class="text-2xl font-bold">Tech Shop Admin</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <% if (user) { %>
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center space-x-2 focus:outline-none">
+                            <span class="text-sm font-medium hidden md:block">สวัสดี, <%= user.username %></span>
+                            <i class="fas fa-user-circle text-2xl"></i>
+                        </button>
+                        <div id="user-menu"
+                            class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-md shadow-lg py-1 hidden">
+                            <a href="/logout" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+                            </a>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-12">
+        <h1 class="text-4xl font-bold mb-8 text-center">แผงควบคุมผู้ดูแลระบบ</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
+                <i class="fas fa-box-open text-4xl text-blue-500 mb-4"></i>
+                <span class="text-xl font-semibold text-gray-700">สินค้าทั้งหมด</span>
+                <span class="text-3xl font-bold text-gray-900 mt-2">
+                    <%= products.length %>
+                </span>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
+                <i class="fas fa-users text-4xl text-green-500 mb-4"></i>
+                <span class="text-xl font-semibold text-gray-700">ผู้ใช้ทั้งหมด</span>
+                <span class="text-3xl font-bold text-gray-900 mt-2">
+                    <%= users.length %>
+                </span>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
+                <i class="fas fa-shopping-cart text-4xl text-purple-500 mb-4"></i>
+                <span class="text-xl font-semibold text-gray-700">คำสั่งซื้อทั้งหมด</span>
+                <span class="text-3xl font-bold text-gray-900 mt-2">
+                    <%= orders.length %>
+                </span>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md flex flex-col items-center">
+                <i class="fas fa-dollar-sign text-4xl text-yellow-500 mb-4"></i>
+                <span class="text-xl font-semibold text-gray-700">ยอดขายรวม</span>
+                <span class="text-3xl font-bold text-gray-900 mt-2">
+                    <% if (payments && typeof payments.totalAmount !== 'undefined') { %>
+                        ฿<%= payments.totalAmount.toLocaleString() %>
+                    <% } else { %>
+                        ฿0
+                    <% } %>
+                </span>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">การจัดการคำสั่งซื้อ</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white">
+                    <thead class="bg-gray-200">
+                        <tr>
+                            <th class="py-2 px-4 text-left font-semibold">ID คำสั่งซื้อ</th>
+                            <th class="py-2 px-4 text-left font-semibold">ชื่อผู้ใช้</th>
+                            <th class="py-2 px-4 text-left font-semibold">ยอดรวม</th>
+                            <th class="py-2 px-4 text-left font-semibold">สถานะ</th>
+                            <th class="py-2 px-4 text-left font-semibold">วันที่</th>
+                            <th class="py-2 px-4 text-left font-semibold">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-table-body">
+                        <% orders.forEach(function(order) { %>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-2 px-4"><%= order.id %></td>
+                            <td class="py-2 px-4"><%= order.username || 'ไม่ระบุ' %></td>
+                            <td class="py-2 px-4">
+                                ฿<%= typeof order.totalAmount !== 'undefined' ? order.totalAmount.toLocaleString() : 'N/A' %>
+                            </td>
+                            <td class="py-2 px-4">
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold
+                                    <% if (order.status === 'สำเร็จ') { %>
+                                        bg-green-200 text-green-800
+                                    <% } else if (order.status === 'รอการชำระเงิน') { %>
+                                        bg-yellow-200 text-yellow-800
+                                    <% } else { %>
+                                        bg-gray-200 text-gray-800
+                                    <% } %>
+                                ">
+                                    <%= order.status %>
+                                </span>
+                            </td>
+                            <td class="py-2 px-4"><%= new Date(order.createdAt).toLocaleDateString('th-TH') %></td>
+                            <td class="py-2 px-4">
+                                <button
+                                    class="update-status-btn btn-primary text-white font-semibold py-1 px-3 rounded-full text-xs hover:scale-105 transition-transform"
+                                    data-order-id="<%= order.id %>">
+                                    อัปเดตสถานะ
+                                </button>
+                            </td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md mt-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">การจัดการสินค้า</h2>
+                    <button id="add-product-btn"
+                        class="btn-primary text-white font-semibold py-2 px-4 rounded-full shadow-lg hover:scale-105 transition-transform">
+                        <i class="fas fa-plus mr-2"></i>เพิ่มสินค้าใหม่
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-200">
+                            <tr>
+                                <th class="py-2 px-4 text-left font-semibold">ID</th>
+                                <th class="py-2 px-4 text-left font-semibold">ชื่อสินค้า</th>
+                                <th class="py-2 px-4 text-left font-semibold">ราคา</th>
+                                <th class="py-2 px-4 text-left font-semibold">หมวดหมู่</th>
+                                <th class="py-2 px-4 text-left font-semibold">รูปภาพ</th>
+                                <th class="py-2 px-4 text-left font-semibold">การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-table-body">
+                            <% products.forEach(function(product) { %>
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="py-2 px-4">
+                                    <%= product.id %>
+                                </td>
+                                <td class="py-2 px-4 font-medium">
+                                    <%= product.name %>
+                                </td>
+                                <td class="py-2 px-4">
+                                    <%= product.price.toLocaleString() %>
+                                </td>
+                                <td class="py-2 px-4">
+                                    <%= product.category %>
+                                </td>
+                                <td class="py-2 px-4">
+                                    <img src="<%= product.image %>" alt="<%= product.name %>"
+                                        class="h-12 w-12 object-cover rounded">
+                                </td>
+                                <td class="py-2 px-4 flex space-x-2">
+                                    <button class="edit-btn text-blue-500 hover:text-blue-700"
+                                        data-product='<%= JSON.stringify(product) %>'>
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-btn text-red-500 hover:text-red-700" data-id="<%= product.id %>">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="product-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4">เพิ่มสินค้าใหม่</h3>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="product-name">ชื่อสินค้า</label>
+                    <input type="text" id="product-name"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="product-price">ราคา</label>
+                    <input type="number" id="product-price"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="product-description">คำอธิบาย</label>
+                    <textarea id="product-description"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="product-category">หมวดหมู่</label>
+                    <input type="text" id="product-category"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="product-brand">แบรนด์</label>
+                    <input type="text" id="product-brand"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="product-image">URL รูปภาพ</label>
+                    <input type="text" id="product-image"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="close-modal-btn"
+                        class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-full hover:bg-gray-400 transition-colors">ยกเลิก</button>
+                    <button type="submit"
+                        class="btn-primary text-white font-semibold py-2 px-4 rounded-full hover:scale-105 transition-transform">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+        if (userMenuBtn && userMenu) {
+            userMenuBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                userMenu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (event) => {
+                if (!userMenu.contains(event.target) && !userMenuBtn.contains(event.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+        }
+
+        const modal = document.getElementById('product-modal');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalTitle = document.getElementById('modal-title');
+        const form = document.getElementById('product-form');
+        const productIdInput = document.getElementById('product-id');
+
+        addProductBtn.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modalTitle.textContent = 'เพิ่มสินค้าใหม่';
+            form.reset();
+            productIdInput.value = '';
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // Handle Add/Edit Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = productIdInput.value;
+            const product = {
+                name: document.getElementById('product-name').value,
+                price: parseFloat(document.getElementById('product-price').value),
+                description: document.getElementById('product-description').value,
+                category: document.getElementById('product-category').value,
+                brand: document.getElementById('product-brand').value,
+                image: document.getElementById('product-image').value
+            };
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`/api/products/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(product)
+                    });
+                } else {
+                    response = await fetch('/api/products/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(product)
+                    });
+                }
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'เกิดข้อผิดพลาด');
+                }
+
+                alert(id ? 'อัปเดตสินค้าสำเร็จ' : 'เพิ่มสินค้าสำเร็จ');
+                modal.classList.add('hidden');
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            }
+        });
+
+        // Handle Edit Button Click
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const product = JSON.parse(this.dataset.product);
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                modalTitle.textContent = 'แก้ไขสินค้า';
+                productIdInput.value = product.id;
+                document.getElementById('product-name').value = product.name;
+                document.getElementById('product-price').value = product.price;
+                document.getElementById('product-description').value = product.description;
+                document.getElementById('product-category').value = product.category;
+                document.getElementById('product-brand').value = product.brand;
+                document.getElementById('product-image').value = product.image;
+            });
+        });
+
+        // Handle Delete Button Click
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', async function () {
+                const productId = this.dataset.id;
+                if (confirm(`คุณแน่ใจหรือไม่ที่จะลบสินค้า ID: ${productId}?`)) {
+                    try {
+                        await fetch(`/api/products/${productId}`, {
+                            method: 'DELETE'
+                        });
+                        alert('ลบสินค้าสำเร็จ');
+                        window.location.reload(); // Reload page to show updated data
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+                    }
+                }
+            });
+        });
+
+        const updateStatusModal = document.createElement('div');
+        updateStatusModal.id = 'update-status-modal';
+        updateStatusModal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4';
+        updateStatusModal.innerHTML = `
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm modal-content">
+                <h3 class="text-2xl font-bold mb-4">อัปเดตสถานะคำสั่งซื้อ</h3>
+                <form id="update-status-form">
+                    <input type="hidden" id="update-order-id">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="order-status">สถานะ</label>
+                        <select id="order-status" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                            <option value="สำเร็จ">สำเร็จ</option>
+                            <option value="รอการชำระเงิน">รอการชำระเงิน</option>
+                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                            <option value="ยกเลิกแล้ว">ยกเลิกแล้ว</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <button type="button" id="close-update-modal-btn" class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-full hover:bg-gray-400 transition-colors">ยกเลิก</button>
+                        <button type="submit" class="btn-primary text-white font-semibold py-2 px-4 rounded-full hover:scale-105 transition-transform">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(updateStatusModal);
+
+        const updateModal = document.getElementById('update-status-modal');
+        const closeUpdateModalBtn = document.getElementById('close-update-modal-btn');
+        const updateStatusForm = document.getElementById('update-status-form');
+        const updateOrderIdInput = document.getElementById('update-order-id');
+        const orderStatusSelect = document.getElementById('order-status');
+
+        document.querySelectorAll('.update-status-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const orderId = this.dataset.orderId;
+                updateModal.classList.remove('hidden');
+                updateModal.classList.add('flex');
+                updateOrderIdInput.value = orderId;
+            });
+        });
+
+        closeUpdateModalBtn.addEventListener('click', () => {
+            updateModal.classList.add('hidden');
+        });
+
+        updateModal.addEventListener('click', (e) => {
+            if (e.target === updateModal) {
+                updateModal.classList.add('hidden');
+            }
+        });
+
+        updateStatusForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = updateOrderIdInput.value;
+            const newStatus = orderStatusSelect.value;
+            try {
+                const response = await fetch(`/api/orders/${orderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+                }
+                alert('อัปเดตสถานะสำเร็จ');
+                window.location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+            }
+        });
+    </script>
+</body>
+
+</html>

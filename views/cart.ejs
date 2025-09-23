@@ -1,0 +1,383 @@
+<!-- views/cart.ejs -->
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ตะกร้าสินค้า - Tech Shop</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #3730a3 0%, #5b21b6 100%);
+    }
+
+    .cart-item {
+      transition: all 0.3s ease;
+    }
+
+    .cart-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50">
+  <!-- Navigation -->
+  <nav class="gradient-bg text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center space-x-4">
+          <i class="fas fa-shopping-cart text-2xl"></i>
+          <h1 class="text-2xl font-bold">ตะกร้าสินค้า</h1>
+        </div>
+        <div class="flex items-center space-x-6">
+          <a href="/" class="hover:text-yellow-200 transition-colors">
+            <i class="fas fa-home mr-1"></i>หน้าแรก
+          </a>
+          <% if (user && user.role === 'admin') { %>
+            <a href="/admin" class="hover:text-yellow-200 transition-colors">จัดการสินค้า</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <!-- Cart Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-gray-800">
+          <i class="fas fa-shopping-bag mr-3 text-purple-600"></i>
+          รายการสินค้าในตะกร้า
+        </h2>
+        <button onclick="clearCart()" class="text-red-600 hover:text-red-800 transition-colors" id="clear-cart-btn">
+          <i class="fas fa-trash mr-2"></i>ลบทั้งหมด
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Cart Items -->
+      <div class="lg:col-span-2">
+        <div id="cart-items" class="space-y-4"></div>
+
+        <!-- Empty cart message -->
+        <div id="empty-cart" class="hidden bg-white rounded-lg shadow-md p-12 text-center">
+          <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-6"></i>
+          <h3 class="text-2xl font-bold text-gray-600 mb-4">ตะกร้าสินค้าว่างเปล่า</h3>
+          <p class="text-gray-500 mb-6">ยังไม่มีสินค้าในตะกร้าของคุณ</p>
+          <a href="/"
+            class="btn-primary text-white px-6 py-3 rounded-lg font-semibold inline-block transition-all hover:scale-105">
+            <i class="fas fa-shopping-bag mr-2"></i>เริ่มช้อปปิ้ง
+          </a>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+          <h3 class="text-xl font-bold text-gray-800 mb-6">สรุปคำสั่งซื้อ</h3>
+
+          <div class="space-y-4">
+            <div class="flex justify-between text-gray-600">
+              <span>จำนวนสินค้า:</span>
+              <span id="total-items">0 ชิ้น</span>
+            </div>
+            <div class="flex justify-between text-gray-600">
+              <span>ราคารวม:</span>
+              <span id="subtotal">฿0</span>
+            </div>
+            <div class="flex justify-between text-gray-600">
+              <span>ค่าส่ง:</span>
+              <span id="shipping-fee">฿100</span>
+            </div>
+            <div class="border-t pt-4">
+              <div class="flex justify-between text-xl font-bold text-gray-800">
+                <span>ยอดรวมทั้งสิ้น:</span>
+                <span id="total-amount">฿100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipping Address -->
+          <div class="mt-6">
+            <h4 class="font-semibold text-gray-800 mb-3">ที่อยู่จัดส่ง</h4>
+            <textarea id="shipping-address" placeholder="กรุณาระบุที่อยู่สำหรับจัดส่ง..."
+              class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              rows="3"></textarea>
+          </div>
+
+          <!-- Checkout Button -->
+          <button id="checkout-btn" onclick="checkout()"
+            class="w-full btn-primary text-white py-4 rounded-lg font-semibold mt-6 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+            <i class="fas fa-credit-card mr-2"></i>สั่งซื้อ
+          </button>
+
+          <!-- Continue Shopping -->
+          <a href="/" class="block text-center text-purple-600 hover:text-purple-800 mt-4 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>ช้อปปิ้งต่อ
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div
+      class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform scale-95 transition-transform duration-300">
+      <div class="p-6 text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <i class="fas fa-check text-2xl text-green-600"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">สั่งซื้อสำเร็จ!</h3>
+        <p class="text-gray-600 mb-6">คำสั่งซื้อของคุณได้รับการยืนยันแล้ว</p>
+        <div class="space-y-3">
+          <p class="text-sm text-gray-500">หมายเลขคำสั่งซื้อ: <span id="order-number" class="font-semibold"></span></p>
+          <button onclick="closeSuccessModal()" class="btn-primary text-white px-6 py-2 rounded-lg">
+            ตกลง
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let cart = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadCartFromServer();
+      updateSummary();
+    });
+
+    // ✅ แก้ไข: โหลดข้อมูล cart จาก server
+    async function loadCartFromServer() {
+      try {
+        const response = await fetch('/api/cart');
+        if (response.ok) {
+          cart = await response.json();
+          loadCart();
+        } else if (response.status === 401) {
+          window.location.href = '/login';
+        } else {
+          showNotification('ไม่สามารถโหลดข้อมูลตะกร้าได้', 'error');
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+        showNotification('เกิดข้อผิดพลาดในการโหลดตะกร้า', 'error');
+      }
+    }
+
+    // ✅ แก้ไข: แสดงรายการสินค้าในตะกร้า
+    function loadCart() {
+      const cartContainer = document.getElementById('cart-items');
+      const emptyCart = document.getElementById('empty-cart');
+
+      if (!cart || cart.length === 0) {
+        cartContainer.innerHTML = '';
+        emptyCart.classList.remove('hidden');
+        document.getElementById('checkout-btn').disabled = true;
+        return;
+      }
+
+      emptyCart.classList.add('hidden');
+      document.getElementById('checkout-btn').disabled = false;
+      
+      cartContainer.innerHTML = cart.map(item => `
+        <div class="cart-item bg-white rounded-lg shadow-md p-6" id="cart-item-${item.productId}">
+          <div class="flex items-center space-x-4">
+            <img src="${item.image || 'https://via.placeholder.com/100'}" alt="${item.name}" class="w-20 h-20 rounded-lg object-cover">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-800">${item.name}</h3>
+              <p class="text-purple-600 font-bold text-xl">฿${item.price.toLocaleString()}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+              <button onclick="updateQuantity(${item.productId}, -1)" class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors">
+                <i class="fas fa-minus text-sm"></i>
+              </button>
+              <span class="text-lg font-semibold w-8 text-center">${item.quantity}</span>
+              <button onclick="updateQuantity(${item.productId}, 1)" class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors">
+                <i class="fas fa-plus text-sm"></i>
+              </button>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-gray-800">฿${(item.price * item.quantity).toLocaleString()}</p>
+              <button onclick="removeFromCart(${item.productId})" class="text-red-600 hover:text-red-800 transition-colors mt-2">
+                <i class="fas fa-trash mr-1"></i>ลบ
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ✅ แก้ไข: อัพเดทจำนวนสินค้า
+    async function updateQuantity(productId, change) {
+      try {
+        const response = await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            productId: productId, 
+            quantity: change
+          })
+        });
+        
+        if (response.ok) {
+          await loadCartFromServer();
+          updateSummary();
+        } else {
+          const error = await response.json();
+          showNotification(error.error || 'ไม่สามารถอัพเดทจำนวนได้', 'error');
+        }
+      } catch (error) {
+        console.error('Update quantity error:', error);
+        showNotification('เกิดข้อผิดพลาดในการอัพเดทจำนวน', 'error');
+      }
+    }
+
+    // ✅ แก้ไข: ลบสินค้าออกจากตะกร้า
+    async function removeFromCart(productId) {
+      try {
+        const response = await fetch(`/api/cart/${productId}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          await loadCartFromServer();
+          updateSummary();
+          showNotification('ลบสินค้าออกจากตะกร้าแล้ว');
+        } else {
+          const error = await response.json();
+          showNotification(error.error || 'ไม่สามารถลบสินค้าได้', 'error');
+        }
+      } catch (error) {
+        console.error('Remove from cart error:', error);
+        showNotification('เกิดข้อผิดพลาดในการลบสินค้า', 'error');
+      }
+    }
+
+    // ✅ แก้ไข: ลบสินค้าทั้งหมด
+    async function clearCart() {
+      if (!cart || cart.length === 0) return;
+      if (confirm('คุณต้องการลบสินค้าทั้งหมดออกจากตะกร้าหรือไม่?')) {
+        try {
+          // ลบทีละรายการ
+          for (const item of cart) {
+            await fetch(`/api/cart/${item.productId}`, { method: 'DELETE' });
+          }
+          await loadCartFromServer();
+          updateSummary();
+          showNotification('ลบสินค้าทั้งหมดออกจากตะกร้าแล้ว');
+        } catch (error) {
+          console.error('Clear cart error:', error);
+          showNotification('เกิดข้อผิดพลาดในการลบสินค้า', 'error');
+        }
+      }
+    }
+
+    // Update summary
+    function updateSummary() {
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const shippingFee = subtotal > 0 ? (subtotal >= 1000 ? 0 : 100) : 0;
+      const total = subtotal + shippingFee;
+      
+      document.getElementById('total-items').textContent = `${totalItems} ชิ้น`;
+      document.getElementById('subtotal').textContent = `฿${subtotal.toLocaleString()}`;
+      document.getElementById('shipping-fee').textContent = shippingFee === 0 ? 'ฟรี' : `฿${shippingFee}`;
+      document.getElementById('total-amount').textContent = `฿${total.toLocaleString()}`;
+      
+      const shippingElement = document.getElementById('shipping-fee');
+      if (shippingFee === 0 && subtotal > 0) {
+        shippingElement.classList.add('text-green-600', 'font-semibold');
+      } else {
+        shippingElement.classList.remove('text-green-600', 'font-semibold');
+      }
+    }
+
+    // ✅ แก้ไข: ชำระเงิน
+    async function checkout() {
+      if (!cart || cart.length === 0) {
+        showNotification('ตะกร้าสินค้าว่างเปล่า', 'error');
+        return;
+      }
+
+      const shippingAddress = document.getElementById('shipping-address').value.trim();
+      if (!shippingAddress) {
+        showNotification('กรุณาระบุที่อยู่สำหรับจัดส่ง', 'error');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/payments/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shippingAddress })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          showSuccessModal(result.orderId);
+          cart = [];
+          loadCart();
+          updateSummary();
+        } else {
+          showNotification(result.error, 'error');
+        }
+      } catch (err) {
+        console.error('Checkout error:', err);
+        showNotification('เกิดข้อผิดพลาดในการชำระเงิน', 'error');
+      }
+    }
+
+    function showSuccessModal(orderId) {
+      document.getElementById('order-number').textContent = orderId;
+      document.getElementById('successModal').classList.remove('hidden');
+      document.getElementById('successModal').classList.add('flex');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('successModal').classList.add('hidden');
+      document.getElementById('successModal').classList.remove('flex');
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+      const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+      const icon = type === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+      const notification = document.createElement('div');
+      notification.className =
+        `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-40 transform translate-x-full transition-transform duration-300`;
+      notification.innerHTML = `
+        <div class="flex items-center">
+          <i class="${icon} mr-2"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สมัครสมาชิก - Tech Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Prompt', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3730a3 0%, #5b21b6 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+        .register-card {
+            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        .floating-animation:nth-child(2) { animation-delay: 2s; }
+        .floating-animation:nth-child(3) { animation-delay: 4s; }
+        .floating-animation:nth-child(4) { animation-delay: 1s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-15px) rotate(1deg); }
+            66% { transform: translateY(10px) rotate(-1deg); }
+        }
+        .input-field {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+        }
+        .input-field:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            transform: translateY(-1px);
+        }
+        .input-field.valid {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        .input-field.invalid {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .strength-weak { background: #ef4444; width: 33%; }
+        .strength-medium { background: #f59e0b; width: 66%; }
+        .strength-strong { background: #10b981; width: 100%; }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Floating Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="floating-animation absolute top-1/4 right-1/4 w-32 h-32 bg-white bg-opacity-10 rounded-full"></div>
+        <div class="floating-animation absolute bottom-1/4 left-1/4 w-48 h-48 bg-white bg-opacity-5 rounded-full"></div>
+        <div class="floating-animation absolute top-3/4 right-1/3 w-24 h-24 bg-white bg-opacity-10 rounded-full"></div>
+        <div class="floating-animation absolute top-1/2 left-1/2 w-36 h-36 bg-white bg-opacity-5 rounded-full"></div>
+    </div>
+
+    <div class="register-card w-full max-w-2xl rounded-3xl shadow-2xl p-10 z-10 fade-in my-8">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:scale-105 transition-transform">
+                <i class="fas fa-user-plus text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">สมัครสมาชิก</h1>
+            <p class="text-gray-600 text-lg">สร้างบัญชีใหม่เพื่อเริ่มช้อปปิ้ง</p>
+        </div>
+
+        <!-- Success Message -->
+        <% if (success) { %>
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-8 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-3 text-xl"></i>
+                    <span class="font-medium"><%= success %></span>
+                </div>
+                <div class="mt-4">
+                    <a href="/login" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                        <i class="fas fa-sign-in-alt mr-2"></i>เข้าสู่ระบบ
+                    </a>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Error Message -->
+        <% if (error) { %>
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-8 rounded-lg">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
+                    <span class="font-medium"><%= error %></span>
+                </div>
+            </div>
+        <% } %>
+
+        <!-- Register Form -->
+        <form method="POST" action="/register" class="space-y-6" id="registerForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-user mr-2 text-purple-600"></i>ชื่อผู้ใช้ *
+                    </label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           required 
+                           minlength="3"
+                           class="input-field w-full px-4 py-3 rounded-xl focus:outline-none"
+                           placeholder="อย่างน้อย 3 ตัวอักษร">
+                    <div id="username-feedback" class="text-sm mt-1 hidden"></div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-envelope mr-2 text-purple-600"></i>อีเมล *
+                    </label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           required 
+                           class="input-field w-full px-4 py-3 rounded-xl focus:outline-none"
+                           placeholder="example@email.com">
+                    <div id="email-feedback" class="text-sm mt-1 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Full Name -->
+            <div>
+                <label for="fullName" class="block text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-id-card mr-2 text-purple-600"></i>ชื่อ-นามสกุล
+                </label>
+                <input type="text" 
+                       id="fullName" 
+                       name="fullName" 
+                       class="input-field w-full px-4 py-3 rounded-xl focus:outline-none"
+                       placeholder="กรอกชื่อ-นามสกุล (ไม่บังคับ)">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-lock mr-2 text-purple-600"></i>รหัสผ่าน *
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               id="password" 
+                               name="password" 
+                               required 
+                               minlength="6"
+                               class="input-field w-full px-4 py-3 rounded-xl focus:outline-none pr-12"
+                               placeholder="อย่างน้อย 6 ตัวอักษร">
+                        <button type="button" 
+                                onclick="togglePassword('password', 'password-icon')" 
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-purple-600 transition-colors">
+                            <i id="password-icon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <!-- Password Strength Indicator -->
+                    <div class="mt-2">
+                        <div class="bg-gray-200 rounded-full h-1">
+                            <div id="password-strength" class="password-strength"></div>
+                        </div>
+                        <div id="password-feedback" class="text-xs mt-1 text-gray-500">ความแข็งแรงรหัสผ่าน</div>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label for="confirmPassword" class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-lock mr-2 text-purple-600"></i>ยืนยันรหัสผ่าน *
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               id="confirmPassword" 
+                               name="confirmPassword" 
+                               required 
+                               class="input-field w-full px-4 py-3 rounded-xl focus:outline-none pr-12"
+                               placeholder="ยืนยันรหัสผ่าน">
+                        <button type="button" 
+                                onclick="togglePassword('confirmPassword', 'confirm-password-icon')" 
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-purple-600 transition-colors">
+                            <i id="confirm-password-icon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <div id="confirm-password-feedback" class="text-sm mt-1 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Role Selection -->
+            <div>
+                <label for="role" class="block text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-user-tag mr-2 text-purple-600"></i>ประเภทบัญชี
+                </label>
+                <select id="role" 
+                        name="role" 
+                        class="input-field w-full px-4 py-3 rounded-xl focus:outline-none">
+                    <option value="member">สมาชิกทั่วไป (ซื้อสินค้า)</option>
+                    <option value="admin">ผู้ดูแลระบบ (จัดการสินค้า)</option>
+                </select>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="flex items-start space-x-3">
+                <input type="checkbox" id="terms" required class="mt-1 w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                <label for="terms" class="text-sm text-gray-700 leading-relaxed">
+                    ฉันยอมรับ <a href="#" class="text-purple-600 hover:text-purple-800 font-semibold">ข้อกำหนดการใช้งาน</a> 
+                    และ <a href="#" class="text-purple-600 hover:text-purple-800 font-semibold">นโยบายความเป็นส่วนตัว</a> *
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" 
+                    id="submit-btn"
+                    class="w-full btn-primary text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-user-plus mr-3"></i>สมัครสมาชิก
+            </button>
+        </form>
+
+        <!-- Password Requirements -->
+        <div class="text-xs text-gray-500 bg-gray-50 p-4 rounded-lg mt-6">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                <span class="font-semibold">ข้อกำหนดรหัสผ่าน:</span>
+            </div>
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-1 ml-4 space-y-1">
+                <li id="length-check" class="flex items-center"><i class="fas fa-times text-red-500 mr-2"></i>มีความยาวอย่างน้อย 6 ตัวอักษร</li>
+                <li id="match-check" class="flex items-center"><i class="fas fa-times text-red-500 mr-2"></i>รหัสผ่านทั้งสองช่องตรงกัน</li>
+            </ul>
+        </div>
+
+        <!-- Divider -->
+        <div class="flex items-center my-8">
+            <div class="flex-1 border-t border-gray-300"></div>
+            <span class="px-4 text-gray-500 font-medium">หรือ</span>
+            <div class="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        <!-- Login Link -->
+        <div class="text-center">
+            <p class="text-gray-600 text-lg">
+                มีบัญชีอยู่แล้ว? 
+                <a href="/login" class="text-purple-600 hover:text-purple-800 font-bold transition-colors underline decoration-2 underline-offset-2">
+                    เข้าสู่ระบบ
+                </a>
+            </p>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a href="/" class="text-gray-500 hover:text-gray-700 transition-colors font-medium">
+                <i class="fas fa-home mr-2"></i>กลับหน้าแรก
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let formValid = false;
+
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const passwordIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.className = 'fas fa-eye';
+            }
+        }
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            let feedback = '';
+            
+            if (password.length >= 6) strength += 1;
+            if (password.length >= 8) strength += 1;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+            
+            const strengthBar = document.getElementById('password-strength');
+            const strengthFeedback = document.getElementById('password-feedback');
+            
+            if (strength <= 2) {
+                strengthBar.className = 'password-strength strength-weak';
+                feedback = 'รหัสผ่านอ่อน';
+                strengthFeedback.className = 'text-xs mt-1 text-red-500';
+            } else if (strength <= 3) {
+                strengthBar.className = 'password-strength strength-medium';
+                feedback = 'รหัสผ่านปานกลาง';
+                strengthFeedback.className = 'text-xs mt-1 text-yellow-600';
+            } else {
+                strengthBar.className = 'password-strength strength-strong';
+                feedback = 'รหัสผ่านแข็งแรง';
+                strengthFeedback.className = 'text-xs mt-1 text-green-600';
+            }
+            
+            strengthFeedback.textContent = feedback;
+        }
+
+        function validateForm() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const terms = document.getElementById('terms').checked;
+            
+            let isValid = true;
+            
+            // Username validation
+            const usernameField = document.getElementById('username');
+            const usernameFeedback = document.getElementById('username-feedback');
+            if (username.length < 3) {
+                usernameField.classList.add('invalid');
+                usernameField.classList.remove('valid');
+                usernameFeedback.textContent = 'ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร';
+                usernameFeedback.className = 'text-sm mt-1 text-red-500';
+                usernameFeedback.classList.remove('hidden');
+                isValid = false;
+            } else {
+                usernameField.classList.add('valid');
+                usernameField.classList.remove('invalid');
+                usernameFeedback.textContent = 'ชื่อผู้ใช้ถูกต้อง';
+                usernameFeedback.className = 'text-sm mt-1 text-green-600';
+                usernameFeedback.classList.remove('hidden');
+            }
+            
+            // Email validation
+            const emailField = document.getElementById('email');
+            const emailFeedback = document.getElementById('email-feedback');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                emailField.classList.add('invalid');
+                emailField.classList.remove('valid');
+                emailFeedback.textContent = 'รูปแบบอีเมลไม่ถูกต้อง';
+                emailFeedback.className = 'text-sm mt-1 text-red-500';
+                emailFeedback.classList.remove('hidden');
+                isValid = false;
+            } else {
+                emailField.classList.add('valid');
+                emailField.classList.remove('invalid');
+                emailFeedback.textContent = 'อีเมลถูกต้อง';
+                emailFeedback.className = 'text-sm mt-1 text-green-600';
+                emailFeedback.classList.remove('hidden');
+            }
+            
+            // Password validation
+            const lengthCheck = document.getElementById('length-check');
+            if (password.length >= 6) {
+                lengthCheck.innerHTML = '<i class="fas fa-check text-green-500 mr-2"></i>มีความยาวอย่างน้อย 6 ตัวอักษร';
+            } else {
+                lengthCheck.innerHTML = '<i class="fas fa-times text-red-500 mr-2"></i>มีความยาวอย่างน้อย 6 ตัวอักษร';
+                isValid = false;
+            }
+            
+            // Confirm password validation
+            const confirmPasswordField = document.getElementById('confirmPassword');
+            const confirmPasswordFeedback = document.getElementById('confirm-password-feedback');
+            const matchCheck = document.getElementById('match-check');
+            
+            if (password !== confirmPassword) {
+                confirmPasswordField.classList.add('invalid');
+                confirmPasswordField.classList.remove('valid');
+                confirmPasswordFeedback.textContent = 'รหัสผ่านไม่ตรงกัน';
+                confirmPasswordFeedback.className = 'text-sm mt-1 text-red-500';
+                confirmPasswordFeedback.classList.remove('hidden');
+                matchCheck.innerHTML = '<i class="fas fa-times text-red-500 mr-2"></i>รหัสผ่านทั้งสองช่องตรงกัน';
+                isValid = false;
+            } else if (confirmPassword) {
+                confirmPasswordField.classList.add('valid');
+                confirmPasswordField.classList.remove('invalid');
+                confirmPasswordFeedback.textContent = 'รหัสผ่านตรงกัน';
+                confirmPasswordFeedback.className = 'text-sm mt-1 text-green-600';
+                confirmPasswordFeedback.classList.remove('hidden');
+                matchCheck.innerHTML = '<i class="fas fa-check text-green-500 mr-2"></i>รหัสผ่านทั้งสองช่องตรงกัน';
+            }
+            
+            // Terms validation
+            if (!terms) {
+                isValid = false;
+            }
+            
+            // Update submit button
+            const submitBtn = document.getElementById('submit-btn');
+            if (isValid) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            
+            formValid = isValid;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('username').focus();
+            
+            // Add real-time validation
+            ['username', 'email', 'password', 'confirmPassword', 'terms'].forEach(id => {
+                const element = document.getElementById(id);
+                element.addEventListener('input', validateForm);
+                element.addEventListener('change', validateForm);
+            });
+            
+            // Password strength checker
+            document.getElementById('password').addEventListener('input', (e) => {
+                checkPasswordStrength(e.target.value);
+                validateForm();
+            });
+            
+            // Initial validation
+            validateForm();
+        });
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            validateForm();
+            
+            if (!formValid) {
+                e.preventDefault();
+                return false;
+            }
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>กำลังสมัครสมาชิก...';
+            submitBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>

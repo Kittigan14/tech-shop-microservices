@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@200;300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Prompt', sans-serif;
+        }
+
+        .product-card {
+            transition: all 0.4s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+
+        .product-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.25);
+        }
+
+        .navbar-shadow {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <nav class="gradient-bg text-white navbar-shadow sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex-shrink-0 flex items-center">
+                    <i class="fas fa-microchip text-2xl mr-2"></i>
+                    <span class="text-2xl font-bold">Tech Shop</span>
+                </a>
+
+                <div class="flex-1 max-w-lg mx-4">
+                    <form action="/search" method="get" class="relative">
+                        <input type="text" name="q" placeholder="ค้นหาสินค้า..."
+                            class="w-full pl-10 pr-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-300 text-gray-800">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </form>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="/cart" class="text-white hover:text-gray-200">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                    </a>
+                    <% if (user) { %>
+                        <div class="relative">
+                            <button id="user-menu-btn" class="flex items-center space-x-2 focus:outline-none">
+                                <span class="text-sm font-medium hidden md:block">สวัสดี, <%= user.username %></span>
+                                <i class="fas fa-user-circle text-2xl"></i>
+                            </button>
+                            <div id="user-menu"
+                                class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-md shadow-lg py-1 hidden">
+                                <% if (user.role === 'admin') { %>
+                                    <a href="/admin" class="block px-4 py-2 hover:bg-gray-100">
+                                        <i class="fas fa-tools mr-2"></i>Admin Dashboard
+                                    </a>
+                                    <% } %>
+                                        <a href="/orders" class="block px-4 py-2 hover:bg-gray-100">
+                                            <i class="fas fa-box-open mr-2"></i>คำสั่งซื้อของฉัน
+                                        </a>
+                                        <a href="/logout" class="block px-4 py-2 hover:bg-gray-100">
+                                            <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+                                        </a>
+                            </div>
+                        </div>
+                        <% } else { %>
+                            <a href="/login"
+                                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full text-sm">
+                                เข้าสู่ระบบ
+                            </a>
+                            <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <section class="mb-12">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">สินค้าแนะนำ</h2>
+                <a href="#" class="text-purple-600 hover:text-purple-800 font-semibold">ดูทั้งหมด →</a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <% products.forEach(product => { %>
+                    <div class="product-card bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+                        <a href="/product/<%= product.id %>" class="relative block h-48 overflow-hidden">
+                            <img src="<%= product.image %>" alt="<%= product.name %>"
+                                class="w-full h-full object-cover">
+                        </a>
+                        <div class="p-4 flex-grow flex flex-col">
+                            <a href="/product/<%= product.id %>" class="font-bold text-lg mb-1 hover:text-purple-700">
+                                <%= product.name %>
+                            </a>
+                            <p class="text-sm text-gray-500 mb-2">
+                                <%= product.brand %>
+                            </p>
+                            <div class="flex items-center justify-between mt-auto">
+                                <span class="text-xl font-bold text-purple-600">
+                                    ฿<%= product.price.toLocaleString() %>
+                                </span>
+                                <button
+                                    class="add-to-cart-btn bg-purple-500 text-white p-2 rounded-full hover:bg-purple-600 transition-colors"
+                                    data-product-id="<%= product.id %>">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+            </div>
+        </section>
+    </main>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+        if (userMenuBtn && userMenu) {
+            userMenuBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                userMenu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (event) => {
+                if (!userMenu.contains(event.target) && !userMenuBtn.contains(event.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+        }
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', async (event) => {
+                const productId = event.currentTarget.dataset.productId;
+                
+                <% if (!user) { %>
+                    window.location.href = '/login';
+                    return;
+                <% } %>
+                
+                try {
+                    const response = await fetch('/api/cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            productId: parseInt(productId),
+                            quantity: 1
+                        }),
+                    });
+                    
+                    const result = await response.json();
+                    if (response.ok) {
+                        swal("สำเร็จ!", "เพิ่มสินค้าลงในตะกร้าแล้ว", "success");
+                    } else {
+                        swal("ผิดพลาด!", result.error, "error");
+                    }
+                } catch (error) {
+                    swal("ผิดพลาด!", "ไม่สามารถเพิ่มสินค้าลงตะกร้าได้", "error");
+                }
+            });
+        });
+        async function addToCart(productId, quantity = 1) {
+            try {
+                const response = await fetch('/api/cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId, quantity })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('เพิ่มสินค้าลงตะกร้าสำเร็จ');
+                } else {
+                    alert(result.error || 'เพิ่มสินค้าล้มเหลว');
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+            }
+        }
+    </script>
+</body>
+
+</html>

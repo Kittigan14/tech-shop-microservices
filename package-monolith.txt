@@ -1,0 +1,34 @@
+{
+  "name": "tech-shop-monolith",
+  "version": "1.0.0",
+  "description": "E-commerce Shopping System using Monolith Architecture",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": [
+    "monolith",
+    "nodejs",
+    "express",
+    "ejs",
+    "ecommerce",
+    "shopping"
+  ],
+  "author": "Tech Shop Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "open": "^10.2.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

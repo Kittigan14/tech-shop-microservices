@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.name %> - Tech Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #3730a3 0%, #5b21b6 100%);
+        }
+        .product-image {
+            transition: transform 0.3s ease;
+        }
+        .product-image:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-shopping-bag text-2xl"></i>
+                    <h1 class="text-2xl font-bold">Tech Shop</h1>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="/" class="hover:text-yellow-200 transition-colors">หน้าแรก</a>
+                    <% if (user) { %>
+                        <% if (user.role === 'admin') { %>
+                            <a href="/admin" class="hover:text-yellow-200 transition-colors">จัดการสินค้า</a>
+                        <% } else { %>
+                            <a href="/cart" class="relative hover:text-yellow-200 transition-colors">
+                                <i class="fas fa-shopping-cart text-xl"></i>
+                                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
+                            </a>
+                        <% } %>
+                        <a href="/logout" class="hover:text-yellow-200 transition-colors">ออกจากระบบ</a>
+                    <% } else { %>
+                        <a href="/login" class="hover:text-yellow-200 transition-colors">เข้าสู่ระบบ</a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <nav class="flex items-center space-x-2 text-sm text-gray-600">
+                <a href="/" class="hover:text-purple-600">หน้าแรก</a>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="text-purple-600"><%= product.category %></span>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="text-gray-800"><%= product.name %></span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Product Detail -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Product Image -->
+            <div class="space-y-4">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <img src="<%= product.image %>" 
+                         alt="<%= product.name %>" 
+                         class="product-image w-full h-96 object-cover">
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <% for (let i = 0; i < 4; i++) { %>
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+                            <img src="<%= product.image %>" alt="<%= product.name %>" class="w-full h-20 object-cover">
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="space-y-6">
+                <!-- Brand and Rating -->
+                <div class="flex items-center justify-between">
+                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        <%= product.brand %>
+                    </span>
+                    <div class="flex items-center space-x-2">
+                        <div class="flex text-yellow-400">
+                            <% for (let i = 0; i < 5; i++) { %>
+                                <i class="fas fa-star"></i>
+                            <% } %>
+                        </div>
+                        <span class="text-sm text-gray-600">(4.8/5)</span>
+                    </div>
+                </div>
+
+                <!-- Product Name -->
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2"><%= product.name %></h1>
+                    <p class="text-gray-600 text-lg leading-relaxed"><%= product.description %></p>
+                </div>
+
+                <!-- Price and Stock -->
+                <div class="border-t border-b py-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <span class="text-4xl font-bold text-purple-600">฿<%= product.price.toLocaleString() %></span>
+                            <span class="text-gray-500 line-through ml-3">฿<%= Math.round(product.price * 1.2).toLocaleString() %></span>
+                        </div>
+                        <div class="text-right">
+                            <% if (product.stock > 0) { %>
+                                <div class="text-green-600 font-semibold">
+                                    <i class="fas fa-check-circle mr-1"></i>พร้อมส่ง
+                                </div>
+                                <div class="text-sm text-gray-600">คงเหลือ <%= product.stock %> ชิ้น</div>
+                            <% } else { %>
+                                <div class="text-red-600 font-semibold">
+                                    <i class="fas fa-times-circle mr-1"></i>สินค้าหมด
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 p-3 rounded-lg">
+                        <div class="text-green-800 text-sm">
+                            <i class="fas fa-truck mr-2"></i>
+                            ฟรีค่าจัดส่งสำหรับการสั่งซื้อเกิน ฿1,000
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantity Selector -->
+                <% if (user && user.role === 'member' && product.stock > 0) { %>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-700 font-semibold">จำนวน:</span>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="updateQuantity(-1)" class="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="quantity" class="text-xl font-semibold w-12 text-center">1</span>
+                            <button onclick="updateQuantity(1)" class="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                <% } %>
+
+                <!-- Action Buttons -->
+                <div class="space-y-3">
+                    <% if (user && user.role === 'member') { %>
+                        <% if (product.stock > 0) { %>
+                            <button onclick="addToCart()" class="w-full btn-gradient text-white py-4 px-6 rounded-lg font-semibold text-lg transition-all hover:scale-105">
+                                <i class="fas fa-cart-plus mr-2"></i>เพิ่มลงตะกร้า
+                            </button>
+                            <button class="w-full bg-orange-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-600 transition-colors">
+                                <i class="fas fa-bolt mr-2"></i>สั่งซื้อทันที
+                            </button>
+                        <% } else { %>
+                            <button disabled class="w-full bg-gray-400 text-white py-4 px-6 rounded-lg font-semibold cursor-not-allowed">
+                                <i class="fas fa-times mr-2"></i>สินค้าหมด
+                            </button>
+                        <% } %>
+                    <% } else if (!user) { %>
+                        <a href="/login" class="block w-full text-center bg-gray-200 text-gray-700 py-4 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                            <i class="fas fa-sign-in-alt mr-2"></i>เข้าสู่ระบบเพื่อซื้อ
+                        </a>
+                    <% } else { %>
+                        <button class="w-full bg-blue-100 text-blue-600 py-4 px-6 rounded-lg font-semibold cursor-default">
+                            <i class="fas fa-eye mr-2"></i>สำหรับผู้ดูแลระบบ - ดูรายละเอียดเท่านั้น
+                        </button>
+                    <% } %>
+                    
+                    <div class="flex space-x-3">
+                        <button class="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-heart mr-2"></i>เพิ่มในรายการโปรด
+                        </button>
+                        <button class="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-share mr-2"></i>แชร์
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Features -->
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-star mr-2 text-yellow-500"></i>จุดเด่นของสินค้า
+                    </h3>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            สินค้าของแท้ 100% พร้อมรับประกัน
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            จัดส่งรวดเร็วภายใน 24 ชั่วโมง
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            บริการหลังการขายที่เยี่ยม
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-2"></i>
+                            ครบกล่องพร้อมอุปกรณ์
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Specifications -->
+        <div class="mt-12 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-6">
+                <i class="fas fa-cog mr-2 text-purple-600"></i>ข้อมูลจำเพาะ
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <% if (product.specifications) { %>
+                    <% Object.entries(product.specifications).forEach(([key, value]) => { %>
+                        <div class="flex justify-between py-3 border-b border-gray-200">
+                            <span class="font-semibold text-gray-700 capitalize"><%= key.replace(/([A-Z])/g, ' $1').trim() %></span>
+                            <span class="text-gray-600"><%= value %></span>
+                        </div>
+                    <% }); %>
+                <% } %>
+                <div class="flex justify-between py-3 border-b border-gray-200">
+                    <span class="font-semibold text-gray-700">หมวดหมู่</span>
+                    <span class="text-gray-600"><%= product.category %></span>
+                </div>
+                <div class="flex justify-between py-3 border-b border-gray-200">
+                    <span class="font-semibold text-gray-700">ยี่ห้อ</span>
+                    <span class="text-gray-600"><%= product.brand %></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Reviews -->
+        <div class="mt-12 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-bold mb-6">
+                <i class="fas fa-star mr-2 text-yellow-500"></i>รีวิวจากลูกค้า
+            </h2>
+            
+            <!-- Review Summary -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="text-4xl font-bold text-gray-800">4.8</div>
+                        <div>
+                            <div class="flex text-yellow-400 mb-1">
+                                <% for (let i = 0; i < 5; i++) { %>
+                                    <i class="fas fa-star"></i>
+                                <% } %>
+                            </div>
+                            <div class="text-sm text-gray-600">จาก 127 รีวิว</div>
+                        </div>
+                    </div>
+                    <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        เขียนรีวิว
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sample Reviews -->
+            <div class="space-y-6">
+                <div class="border-b border-gray-200 pb-6">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-purple-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold">ลูกค้า A</div>
+                            <div class="flex items-center space-x-2">
+                                <div class="flex text-yellow-400">
+                                    <% for (let i = 0; i < 5; i++) { %>
+                                        <i class="fas fa-star text-sm"></i>
+                                    <% } %>
+                                </div>
+                                <span class="text-sm text-gray-500">2 สัปดาห์ที่แล้ว</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700">สินค้าดีมาก คุณภาพเยี่ยม การจัดส่งรวดเร็ว บรรจุภัณฑ์ดี แนะนำเลยครับ</p>
+                </div>
+                
+                <div class="border-b border-gray-200 pb-6">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-green-600"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold">ลูกค้า B</div>
+                            <div class="flex items-center space-x-2">
+                                <div class="flex text-yellow-400">
+                                    <% for (let i = 0; i < 4; i++) { %>
+                                        <i class="fas fa-star text-sm"></i>
+                                    <% } %>
+                                    <i class="far fa-star text-sm"></i>
+                                </div>
+                                <span class="text-sm text-gray-500">1 เดือนที่แล้ว</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700">โดยรวมดีครับ ตรงตามที่คาดหวัง ราคาสมเหตุสมผล บริการดี</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        let quantity = 1;
+        const maxStock = <%= product.stock %>;
+
+        // Initialize cart count
+        document.addEventListener('DOMContentLoaded', () => {
+            <% if (user && user.role === 'member') { %>
+                updateCartCount();
+            <% } %>
+        });
+
+        function updateQuantity(change) {
+            const newQuantity = quantity + change;
+            if (newQuantity >= 1 && newQuantity <= maxStock) {
+                quantity = newQuantity;
+                document.getElementById('quantity').textContent = quantity;
+            }
+        }
+
+        <% if (user && user.role === 'member') { %>
+        function addToCart() {
+            const productId = <%= product.id %>;
+            const productName = '<%= product.name.replace(/'/g, "\\'") %>';
+            const productPrice = <%= product.price %>;
+            const productImage = '<%= product.image %>';  // ✅ เพิ่มมาเก็บ
+            
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: productId,
+                    name: productName,
+                    price: productPrice,
+                    image: productImage,  // ✅ เก็บ image ด้วย
+                    quantity: quantity
+                });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            showNotification(`เพิ่ม ${productName} จำนวน ${quantity} ชิ้นลงตะกร้าแล้ว!`);
+        }
+
+
+        function updateCartCount() {
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            const cartCountElement = document.getElementById('cart-count');
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+            }
+        }
+        <% } %>
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+                async function addToCart(productId, quantity = 1) {
+            try {
+                const response = await fetch('/api/cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId, quantity })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('เพิ่มสินค้าลงตะกร้าสำเร็จ');
+                } else {
+                    alert(result.error || 'เพิ่มสินค้าล้มเหลว');
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -20,7 +20,7 @@ app.use(session({
 
 // ================= DATA =================
 let nextProductId = 11;
-const products = [{
+let products = [{
     id: 1,
     name: "iPhone 15 Pro",
     price: 41900,
@@ -98,6 +98,14 @@ let carts = new Map();
 let orders = new Map();
 let payments = new Map();
 
+// ================= SERVICE STATE (FOR MONOLITH MOCK) =================
+const serviceState = {
+    PRODUCT: true,
+    USER: true,
+    ORDER: true,
+    PAYMENT: true
+};
+
 // ================= USERS =================
 (async () => {
     users = [
@@ -106,6 +114,33 @@ let payments = new Map();
     ];
 })();
 
+// ================= MIDDLEWARE =================
+function isAdmin(req, res, next) {
+    if (req.session.user?.role === 'admin') return next();
+    return res.status(403).json({ error: 'Unauthorized' });
+}
+
+// NEW: Middleware to check the service status before allowing access to a route
+function checkMonolithServiceStatus(serviceKey) {
+    return (req, res, next) => {
+        if (!serviceState[serviceKey]) {
+            if (req.path.startsWith('/api/')) {
+                return res.status(503).json({
+                    error: `Service Unavailable: The '${serviceKey}' service is turned off.`
+                });
+            } else {
+                return res.status(503).render('error', {
+                    title: 'Service Unavailable',
+                    message: `The ${serviceKey} service is currently turned off by the admin.`,
+                    user: req.session.user
+                });
+            }
+        }
+        next();
+    };
+}
+
+// ================= AUTH ROUTES =================
 app.get('/login', (req, res) => res.render('login', { title: 'เข้าสู่ระบบ', user: req.session.user, error: null }));
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -132,48 +167,44 @@ app.post('/register', async (req, res) => {
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
 // ================= PRODUCTS =================
-app.get('/', (req, res) => {
+app.get('/', checkMonolithServiceStatus('PRODUCT'), (req, res) => {
     const categories = [...new Set(products.map(p => p.category))];
     const brands = [...new Set(products.map(p => p.brand))];
     res.render('index', { title: 'หน้าหลัก', user: req.session.user, products, categories, brands });
 });
 
-app.get('/product/:id', (req, res) => {
+app.get('/product/:id', checkMonolithServiceStatus('PRODUCT'), (req, res) => {
     const product = products.find(p => p.id == req.params.id);
     if (!product) return res.render('error', { title: 'Error', message: 'ไม่พบสินค้า', user: req.session.user });
     res.render('product-detail', { title: 'รายละเอียดสินค้า', product, user: req.session.user });
 });
 
 // CRUD for admin
-function isAdmin(req, res, next) {
-    if (req.session.user?.role === 'admin') return next();
-    return res.status(403).json({ error: 'Unauthorized' });
-}
-app.post('/api/products/add', isAdmin, (req, res) => {
+app.post('/api/products/add', isAdmin, checkMonolithServiceStatus('PRODUCT'), (req, res) => {
     const newProduct = { id: nextProductId++, ...req.body };
     products.push(newProduct);
     res.status(201).json(newProduct);
 });
-app.put('/api/products/:id', isAdmin, (req, res) => {
+app.put('/api/products/:id', isAdmin, checkMonolithServiceStatus('PRODUCT'), (req, res) => {
     const id = parseInt(req.params.id);
     const index = products.findIndex(p => p.id === id);
     if (index === -1) return res.status(404).json({ error: 'ไม่พบสินค้า' });
     products[index] = { ...products[index], ...req.body, id };
     res.json(products[index]);
 });
-app.delete('/api/products/:id', isAdmin, (req, res) => {
+app.delete('/api/products/:id', isAdmin, checkMonolithServiceStatus('PRODUCT'), (req, res) => {
     const id = parseInt(req.params.id);
     products = products.filter(p => p.id !== id);
     res.json({ message: 'ลบสินค้าสำเร็จ' });
 });
 
 // ================= CART =================
-app.get('/cart', (req, res) => {
+app.get('/cart', checkMonolithServiceStatus('ORDER'), (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.render('cart', { title: 'ตะกร้าสินค้า', user: req.session.user });
 });
 
-app.get('/api/cart', (req, res) => {
+app.get('/api/cart', checkMonolithServiceStatus('ORDER'), (req, res) => {
     const userId = req.session.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     const cart = carts.get(userId) || [];
@@ -183,7 +214,7 @@ app.get('/api/cart', (req, res) => {
     });
     res.json(cartWithProducts);
 });
-app.post('/api/cart', (req, res) => {
+app.post('/api/cart', checkMonolithServiceStatus('ORDER'), (req, res) => {
     const { productId, quantity } = req.body;
     const userId = req.session.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
@@ -194,7 +225,7 @@ app.post('/api/cart', (req, res) => {
     carts.set(userId, cart);
     res.json(cart);
 });
-app.delete('/api/cart/:productId', (req, res) => {
+app.delete('/api/cart/:productId', checkMonolithServiceStatus('ORDER'), (req, res) => {
     const userId = req.session.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     let cart = carts.get(userId) || [];
@@ -204,7 +235,7 @@ app.delete('/api/cart/:productId', (req, res) => {
 });
 
 // ================= CHECKOUT & ORDERS =================
-app.post('/api/payments/checkout', (req, res) => {
+app.post('/api/payments/checkout', checkMonolithServiceStatus('ORDER'), checkMonolithServiceStatus('PAYMENT'), (req, res) => {
     const userId = req.session.user?.id;
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
     const cart = carts.get(userId) || [];
@@ -228,13 +259,13 @@ app.post('/api/payments/checkout', (req, res) => {
     res.json({ message: 'ชำระเงินสำเร็จ', orderId });
 });
 
-app.get('/orders', (req, res) => {
+app.get('/orders', checkMonolithServiceStatus('ORDER'), (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const userOrders = orders.get(req.session.user.id) || [];
     res.render('orders', { title: 'ประวัติการสั่งซื้อ', user: req.session.user, orders: userOrders });
 });
 
-// ================= ADMIN DASHBOARD =================
+// ================= ADMIN DASHBOARD & SERVICE MGMT =================
 app.get('/admin', isAdmin, (req, res) => {
     res.render('admin', {
         title: 'แผงควบคุมผู้ดูแลระบบ',
@@ -246,10 +277,31 @@ app.get('/admin', isAdmin, (req, res) => {
     });
 });
 
+app.get('/admin/services', isAdmin, (req, res) => {
+    res.render('services', {
+        title: 'จัดการ Service (Monolith)',
+        user: req.session.user,
+        serviceState
+    });
+});
+
+app.post('/api/admin/services/toggle', isAdmin, (req, res) => {
+    const { serviceKey } = req.body;
+    if (serviceState.hasOwnProperty(serviceKey)) {
+        serviceState[serviceKey] = !serviceState[serviceKey];
+        console.log(`[Monolith Mock] Toggled ${serviceKey} to ${serviceState[serviceKey] ? 'ON' : 'OFF'}`);
+        res.json({
+            message: `${serviceKey} toggled (simulation only)`,
+            state: serviceState[serviceKey]
+        });
+    } else {
+        res.status(400).json({ error: 'Service key is invalid' });
+    }
+});
+
 // ================= START SERVER =================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Monolith app running at http://localhost:${PORT}`);
     open.default(`http://localhost:${PORT}`);
 });
-

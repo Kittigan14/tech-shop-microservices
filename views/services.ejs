@@ -1,0 +1,189 @@
+<!-- <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title><%= title %></title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 2rem; }
+        .service { margin-bottom: 1rem; }
+        button { padding: 0.5rem 1rem; }
+    </style>
+</head>
+<body>
+    <h1>จัดการ Service</h1>
+    <p>Admin: <%= user.username %></p>
+    <ul>
+        <% for (let key in serviceState) { %>
+            <li class="service">
+                <strong><%= key %></strong> : 
+                <span id="<%= key %>"><%= serviceState[key] ? 'ON' : 'OFF' %></span>
+                <button onclick="toggleService('<%= key %>')">Toggle</button>
+            </li>
+        <% } %>
+    </ul>
+    <a href="/admin">กลับไปหน้า Admin</a>
+
+    <script>
+        async function toggleService(serviceKey) {
+            const res = await fetch('/api/admin/services/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serviceKey })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById(serviceKey).innerText = data.state ? 'ON' : 'OFF';
+            } else {
+                alert(data.error);
+            }
+        }
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@200;300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Prompt', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/admin" class="flex-shrink-0 flex items-center">
+                    <i class="fas fa-microchip text-2xl mr-2"></i>
+                    <span class="text-2xl font-bold">Tech Shop Admin</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <% if (user) { %>
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center space-x-2 focus:outline-none">
+                            <span class="text-sm font-medium hidden md:block">สวัสดี, <%= user.username %></span>
+                            <i class="fas fa-user-circle text-2xl"></i>
+                        </button>
+                        <div id="user-menu"
+                            class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-md shadow-lg py-1 hidden">
+                            <a href="/admin" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
+                            <a href="/logout" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+                            </a>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-12">
+        <div class="bg-white p-8 rounded-lg shadow-xl">
+            <div class="flex items-center justify-between mb-8 border-b pb-4">
+                <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-server mr-3 text-indigo-500"></i>จัดการสถานะ Service</h1>
+                <a href="/admin" class="text-indigo-600 hover:text-indigo-800 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้า Admin
+                </a>
+            </div>
+
+            <div class="space-y-4">
+                <% for (let key in serviceState) { %>
+                <div class="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                    <div class="flex items-center">
+                        <i class="fas fa-cogs text-2xl text-gray-400 mr-4"></i>
+                        <span class="text-xl font-semibold text-gray-700"><%= key %></span>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <span id="<%= key %>-status" class="px-3 py-1 text-sm font-bold text-white rounded-full transition-colors
+                            <%= serviceState[key] ? 'bg-green-500' : 'bg-red-500' %>">
+                            <%= serviceState[key] ? 'ON' : 'OFF' %>
+                        </span>
+                        <button onclick="toggleService('<%= key %>')"
+                            class="px-4 py-2 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-opacity-75 transition-transform transform hover:scale-105
+                            <%= serviceState[key] ? 'bg-red-500 hover:bg-red-600 focus:ring-red-400' : 'bg-green-500 hover:bg-green-600 focus:ring-green-400' %>">
+                            <%= serviceState[key] ? 'Turn OFF' : 'Turn ON' %>
+                        </button>
+                    </div>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // User menu dropdown toggle
+        const userMenuBtn = document.getElementById('user-menu-btn');
+        const userMenu = document.getElementById('user-menu');
+        if (userMenuBtn) {
+            userMenuBtn.addEventListener('click', () => {
+                userMenu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+        }
+        
+        async function toggleService(serviceKey) {
+            const statusBadge = document.getElementById(`${serviceKey}-status`);
+            
+            try {
+                const response = await fetch('/api/admin/services/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ serviceKey })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Something went wrong');
+                }
+
+                const data = await response.json();
+
+                // Update status badge
+                statusBadge.textContent = data.state ? 'ON' : 'OFF';
+                statusBadge.classList.toggle('bg-green-500', data.state);
+                statusBadge.classList.toggle('bg-red-500', !data.state);
+
+                // Update button (Optional, but good UX)
+                const button = statusBadge.nextElementSibling;
+                button.textContent = data.state ? 'Turn OFF' : 'Turn ON';
+                button.classList.toggle('bg-red-500', data.state);
+                button.classList.toggle('hover:bg-red-600', data.state);
+                button.classList.toggle('focus:ring-red-400', data.state);
+                button.classList.toggle('bg-green-500', !data.state);
+                button.classList.toggle('hover:bg-green-600', !data.state);
+                button.classList.toggle('focus:ring-green-400', !data.state);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

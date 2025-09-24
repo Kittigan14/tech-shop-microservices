@@ -68,6 +68,9 @@
                             <a href="/logout" class="block px-4 py-2 hover:bg-gray-100">
                                 <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
                             </a>
+                            <a href="/admin/services" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>จัดการ Service
+                            </a>
                         </div>
                     </div>
                     <% } %>
@@ -106,9 +109,9 @@
                 <span class="text-xl font-semibold text-gray-700">ยอดขายรวม</span>
                 <span class="text-3xl font-bold text-gray-900 mt-2">
                     <% if (payments && typeof payments.totalAmount !== 'undefined') { %>
-                        ฿<%= payments.totalAmount.toLocaleString() %>
+                    ฿<%= payments.totalAmount.toLocaleString() %>
                     <% } else { %>
-                        ฿0
+                    ฿0
                     <% } %>
                 </span>
             </div>
@@ -209,7 +212,8 @@
                                         data-product='<%= JSON.stringify(product) %>'>
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="delete-btn text-red-500 hover:text-red-700" data-id="<%= product.id %>">
+                                    <button class="delete-btn text-red-500 hover:text-red-700"
+                                        data-id="<%= product.id %>">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </td>
@@ -219,7 +223,8 @@
                     </table>
                 </div>
             </div>
-        </div>
+        </div>  
+
     </main>
 
     <div id="product-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center p-4">
@@ -472,6 +477,127 @@
                 alert(error.message || 'เกิดข้อผิดพลาดในการอัปเดตสถานะ');
             }
         });
+
+        const logEl = document.getElementById('log');
+
+        // Mock Service State
+        const serviceState = {
+            product: true,
+            user: true,
+            order: true,
+            payment: true
+        };
+
+        // Toggle Service On/Off (Mock)
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const service = btn.dataset.service;
+                serviceState[service] = !serviceState[service];
+                addLog(`${service} service turned ${serviceState[service] ? 'ON ✅' : 'OFF ❌'}`);
+            });
+        });
+
+        // Test Service through API Gateway
+        document.querySelectorAll('.test-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const service = btn.dataset.service;
+                const statusEl = btn.nextElementSibling;
+                statusEl.textContent = 'Status: Testing...';
+
+                // Check mock state first
+                if (!serviceState[service]) {
+                    statusEl.textContent = 'Status: ❌ Down (Service OFF)';
+                    addLog(`Test ${service}: Service is OFF`);
+                    return;
+                }
+
+                // API Gateway routes
+                const urls = {
+                    product: '/products',
+                    user: '/users',
+                    order: '/orders',
+                    payment: '/payments'
+                };
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                try {
+                    const res = await fetch(urls[service], {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    statusEl.textContent = 'Status: ✅ Up';
+                    addLog(`Test ${service}: Up ✅`);
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        statusEl.textContent = 'Status: ⏱ Timeout';
+                        addLog(`Test ${service}: Timeout ⏱`);
+                    } else {
+                        statusEl.textContent = `Status: ❌ Down (${err.message})`;
+                        addLog(`Test ${service}: Down ❌ (${err.message})`);
+                    }
+                }
+            });
+        });
+
+        // Example: Workflow Test (Create order through all services)
+        async function workflowTest() {
+            addLog('Starting workflow test: Create order');
+            if (!serviceState.user || !serviceState.product || !serviceState.order || !serviceState.payment) {
+                addLog('Workflow failed: Some services are OFF ❌');
+                return;
+            }
+
+            try {
+                // Example: fetch first user
+                const userRes = await fetch('/users');
+                const users = await userRes.json();
+                const userId = users[0] ?.id;
+                addLog(`Selected user: ${users[0]?.username}`);
+
+                // Example: fetch products
+                const productRes = await fetch('/products');
+                const products = await productRes.json();
+                const productId = products[0] ?.id;
+                addLog(`Selected product: ${products[0]?.name}`);
+
+                // Create order
+                const orderRes = await fetch('/orders/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        productId,
+                        quantity: 1
+                    })
+                });
+                const order = await orderRes.json();
+                addLog(`Order created: ID ${order.id}`);
+
+                addLog('Workflow test completed ✅');
+            } catch (err) {
+                addLog(`Workflow error ❌: ${err.message}`);
+            }
+        }
+
+        // Utility: Add log
+        function addLog(msg) {
+            const li = document.createElement('li');
+            li.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logEl.appendChild(li);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Add button for workflow test
+        const workflowBtn = document.createElement('button');
+        workflowBtn.textContent = 'Run Workflow Test';
+        workflowBtn.className = 'btn-primary text-white py-2 px-4 rounded mt-4';
+        workflowBtn.addEventListener('click', workflowTest);
+        document.querySelector('.bg-white.p-6.rounded-lg.shadow-md.mt-8').appendChild(workflowBtn);
     </script>
 </body>
 

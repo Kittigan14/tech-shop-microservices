@@ -19,7 +19,6 @@ const users = [{
 const hashPasswords = async () => {
     users[0].password = await bcrypt.hash('12345678', 10);
     users[1].password = await bcrypt.hash('12345678', 10);
-    users[2].password = await bcrypt.hash('12345678', 10);
     console.log('✅ Passwords have been hashed.');
 };
 hashPasswords();
